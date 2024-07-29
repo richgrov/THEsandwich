@@ -52,7 +52,9 @@ func (fc *flightComputer) OnJoin(s *discordgo.Session, event *discordgo.GuildMem
 	}
 
 	msg := fmt.Sprintf("User %s has entered the airlock. Processing allocated to %s:", event.User.Username, channel.Mention())
-	s.ChannelMessageSend(fc.airlockIngress, msg)
+	if _, err := fc.Session.ChannelMessageSend(fc.airlockIngress, msg); err != nil {
+		fc.Log(bots.SevErr, "error sending ingress log: %v", err)
+	}
 }
 
 func main() {
