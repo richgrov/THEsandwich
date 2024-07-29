@@ -27,18 +27,21 @@ type flightComputer struct {
 
 func (fc *flightComputer) OnJoin(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
 	fc.Log(bots.SevTrace, "Begin processing member join: %#v", event)
+	fc.RunJoinRoutine(event.User)
+}
 
-	channel, err := s.GuildChannelCreateComplex(fc.Bot.Guild, discordgo.GuildChannelCreateData{
-		Name: "proc-" + event.User.ID,
+func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
+	channel, err := fc.Session.GuildChannelCreateComplex(fc.Bot.Guild, discordgo.GuildChannelCreateData{
+		Name: "proc-" + user.ID,
 		Type: discordgo.ChannelTypeGuildText,
 		PermissionOverwrites: []*discordgo.PermissionOverwrite{
 			{
-				ID:    event.User.ID,
+				ID:    user.ID,
 				Type:  discordgo.PermissionOverwriteTypeMember,
 				Allow: discordgo.PermissionViewChannel,
 			},
 			{
-				ID:    event.User.ID,
+				ID:    user.ID,
 				Type:  discordgo.PermissionOverwriteTypeMember,
 				Allow: discordgo.PermissionSendMessages,
 			},
@@ -51,7 +54,7 @@ func (fc *flightComputer) OnJoin(s *discordgo.Session, event *discordgo.GuildMem
 		return
 	}
 
-	msg := fmt.Sprintf("User %s has entered the airlock. Processing allocated to %s:", event.User.Username, channel.Mention())
+	msg := fmt.Sprintf("User %s has entered the airlock. Processing allocated to %s:", user.Username, channel.Mention())
 	if _, err := fc.Session.ChannelMessageSend(fc.airlockIngress, msg); err != nil {
 		fc.Log(bots.SevErr, "error sending ingress log: %v", err)
 	}
