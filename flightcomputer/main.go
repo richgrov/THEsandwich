@@ -60,6 +60,20 @@ func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
 	}
 }
 
+func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.MessageCreate) {
+	content := event.Message.Content
+	if len(content) < 1 || content[0] != '.' {
+		return
+	}
+
+	command := content[1:]
+
+	switch command {
+	case "debug join":
+		fc.RunJoinRoutine(event.Author)
+	}
+}
+
 func main() {
 	config, err := loadConfig("config.json")
 	if err != nil {
@@ -77,6 +91,7 @@ func main() {
 		airlockIngress:  config.AirlockIngress,
 	}
 	fc.AddEventListener(fc.OnJoin)
+	fc.AddEventListener(fc.OnMessage)
 	defer fc.Close()
 
 	sig := make(chan os.Signal, 1)
