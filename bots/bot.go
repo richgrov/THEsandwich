@@ -42,6 +42,8 @@ func NewBot(token string, logChannel string) (*Bot, error) {
 		return nil, err
 	}
 
+	session.Identify.Intents |= discordgo.IntentsMessageContent
+
 	if err := session.Open(); err != nil {
 		return nil, err
 	}
