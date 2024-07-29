@@ -8,18 +8,18 @@ import (
 )
 
 type Bot struct {
-	session    *discordgo.Session
+	Session    *discordgo.Session
 	Guild      string
 	logChannel string
 }
 
 func (bot *Bot) Log(sev severity, format string, args ...any) {
-	bot.session.ChannelMessageSend(bot.logChannel, SeverityToEmote(sev)+" "+fmt.Sprintf(format, args...))
+	bot.Session.ChannelMessageSend(bot.logChannel, SeverityToEmote(sev)+" "+fmt.Sprintf(format, args...))
 	log.Printf(format+"\n", args...)
 }
 
 func (bot *Bot) FindChannel(name string) error {
-	channels, err := bot.session.GuildChannels(bot.Guild)
+	channels, err := bot.Session.GuildChannels(bot.Guild)
 	if err != nil {
 		return err
 	}
@@ -29,11 +29,11 @@ func (bot *Bot) FindChannel(name string) error {
 }
 
 func (bot *Bot) AddEventListener(callback any) {
-	bot.session.AddHandler(callback)
+	bot.Session.AddHandler(callback)
 }
 
 func (bot *Bot) Close() {
-	bot.session.Close()
+	bot.Session.Close()
 }
 
 func NewBot(token string, logChannel string) (*Bot, error) {
@@ -53,7 +53,7 @@ func NewBot(token string, logChannel string) (*Bot, error) {
 	}
 
 	return &Bot{
-		session:    session,
+		Session:    session,
 		Guild:      session.State.Guilds[0].ID,
 		logChannel: logChannel,
 	}, nil
