@@ -66,7 +66,11 @@ func main() {
 		log.Fatalf("Error initializing bot: %v\n", err)
 	}
 
-	fc := flightComputer{Bot: bot}
+	fc := flightComputer{
+		Bot:             bot,
+		airlockCategory: config.AirlockCategory,
+		airlockIngress:  config.AirlockIngress,
+	}
 	fc.AddEventListener(fc.OnJoin)
 	defer fc.Close()
 
