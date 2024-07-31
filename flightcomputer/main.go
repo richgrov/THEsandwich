@@ -85,6 +85,22 @@ func (fc *flightComputer) EvaluateAirlockCommand(event *discordgo.MessageCreate)
 	}
 }
 
+func (fc *flightComputer) DetatchTenCommand(event *discordgo.MessageCreate) {
+	history, err := fc.Session.ChannelMessages(event.ChannelID, 11, "", "", "")
+	if err != nil {
+		fc.Log(bots.SevErr, "failed to get channel history: %v", err)
+	}
+
+	messageIds := make([]string, len(history))
+	for i, msg := range history {
+		messageIds[i] = msg.ID
+	}
+
+	if err := fc.Session.ChannelMessagesBulkDelete(event.ChannelID, messageIds); err != nil {
+		fc.Log(bots.SevErr, "failed to detatch messages: %v", err)
+	}
+}
+
 func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.MessageCreate) {
 	if event.Author.ID == fc.Session.State.User.ID {
 		return
@@ -124,6 +140,7 @@ func main() {
 
 	fc.commands = []command{
 		{"evaluate airlock", fc.EvaluateAirlockCommand},
+		{"detatch ten", fc.DetatchTenCommand},
 	}
 
 	fc.AddEventListener(fc.OnJoin)
