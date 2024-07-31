@@ -89,7 +89,7 @@ func main() {
 
 	airlockCategory, err := bot.Session.Channel(config.AirlockCategory)
 	if err != nil {
-		log.Fatalf("error fetching airlock category: %#v", err)
+		log.Fatalf("error fetching airlock category: %v", err)
 	}
 
 	fc := flightComputer{
