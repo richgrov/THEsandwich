@@ -70,6 +70,10 @@ func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
 }
 
 func (fc *flightComputer) EvaluateAirlockCommand(event *discordgo.MessageCreate) {
+	if !fc.HasPermission(event.Message, discordgo.PermissionManageChannels) {
+		return
+	}
+
 	if _, err := fc.Session.ChannelMessageSendReply(event.ChannelID, ":white_check_mark: Evaluate airlock", event.Reference()); err != nil {
 		fc.Log(bots.SevErr, "failed to send command acknowledgement: %v", err)
 	}
@@ -86,6 +90,10 @@ func (fc *flightComputer) EvaluateAirlockCommand(event *discordgo.MessageCreate)
 }
 
 func (fc *flightComputer) DetatchTenCommand(event *discordgo.MessageCreate) {
+	if !fc.HasPermission(event.Message, discordgo.PermissionManageMessages) {
+		return
+	}
+
 	history, err := fc.Session.ChannelMessages(event.ChannelID, 11, "", "", "")
 	if err != nil {
 		fc.Log(bots.SevErr, "failed to get channel history: %v", err)
