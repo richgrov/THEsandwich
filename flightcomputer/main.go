@@ -20,10 +20,16 @@ type config struct {
 	LogChannel      string `json:"logs"`
 }
 
+type command struct {
+	phrase   string
+	callback func(*discordgo.MessageCreate)
+}
+
 type flightComputer struct {
 	*bots.Bot
 	airlockCategory *discordgo.Channel
 	airlockIngress  string
+	commands        []command
 }
 
 func (fc *flightComputer) OnJoin(s *discordgo.Session, event *discordgo.GuildMemberAdd) {
@@ -84,10 +90,13 @@ func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.Messa
 		return
 	}
 
-	command := strings.ToLower(event.Message.Content)
+	message := strings.ToLower(event.Message.Content)
 
-	if strings.Contains(command, "evaluate airlock") {
-		fc.EvaluateAirlockCommand(event)
+	for _, command := range fc.commands {
+		if strings.Contains(message, command.phrase) {
+			command.callback(event)
+			break
+		}
 	}
 }
 
@@ -112,6 +121,11 @@ func main() {
 		airlockCategory: airlockCategory,
 		airlockIngress:  config.AirlockIngress,
 	}
+
+	fc.commands = []command{
+		{"evaluate airlock", fc.EvaluateAirlockCommand},
+	}
+
 	fc.AddEventListener(fc.OnJoin)
 	fc.AddEventListener(fc.OnMessage)
 	defer fc.Close()
