@@ -64,6 +64,10 @@ func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
 }
 
 func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.MessageCreate) {
+	if event.Author.ID == fc.Session.State.User.ID {
+		return
+	}
+
 	command := strings.ToLower(event.Message.Content)
 
 	if strings.Contains(command, "evaluate airlock") {
