@@ -21,7 +21,7 @@ type config struct {
 
 type flightComputer struct {
 	*bots.Bot
-	airlockCategory string
+	airlockCategory *discordgo.Channel
 	airlockIngress  string
 }
 
@@ -31,22 +31,24 @@ func (fc *flightComputer) OnJoin(s *discordgo.Session, event *discordgo.GuildMem
 }
 
 func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
+	categoryPerms := fc.airlockCategory.PermissionOverwrites
+
+	permOverrides := append([]*discordgo.PermissionOverwrite{}, categoryPerms...)
+	permOverrides = append(permOverrides, &discordgo.PermissionOverwrite{
+		ID:    user.ID,
+		Type:  discordgo.PermissionOverwriteTypeMember,
+		Allow: discordgo.PermissionViewChannel,
+	}, &discordgo.PermissionOverwrite{
+		ID:    user.ID,
+		Type:  discordgo.PermissionOverwriteTypeMember,
+		Allow: discordgo.PermissionSendMessages,
+	})
+
 	channel, err := fc.Session.GuildChannelCreateComplex(fc.Bot.Guild, discordgo.GuildChannelCreateData{
-		Name: "proc-" + user.ID,
-		Type: discordgo.ChannelTypeGuildText,
-		PermissionOverwrites: []*discordgo.PermissionOverwrite{
-			{
-				ID:    user.ID,
-				Type:  discordgo.PermissionOverwriteTypeMember,
-				Allow: discordgo.PermissionViewChannel,
-			},
-			{
-				ID:    user.ID,
-				Type:  discordgo.PermissionOverwriteTypeMember,
-				Allow: discordgo.PermissionSendMessages,
-			},
-		},
-		ParentID: fc.airlockCategory,
+		Name:                 "proc-" + user.ID,
+		Type:                 discordgo.ChannelTypeGuildText,
+		PermissionOverwrites: permOverrides,
+		ParentID:             fc.airlockCategory.ID,
 	})
 
 	if err != nil {
@@ -85,9 +87,14 @@ func main() {
 		log.Fatalf("Error initializing bot: %v\n", err)
 	}
 
+	airlockCategory, err := bot.Session.Channel(config.AirlockCategory)
+	if err != nil {
+		log.Fatalf("error fetching airlock category: %#v", err)
+	}
+
 	fc := flightComputer{
 		Bot:             bot,
-		airlockCategory: config.AirlockCategory,
+		airlockCategory: airlockCategory,
 		airlockIngress:  config.AirlockIngress,
 	}
 	fc.AddEventListener(fc.OnJoin)
