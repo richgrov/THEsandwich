@@ -63,6 +63,22 @@ func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
 	}
 }
 
+func (fc *flightComputer) EvaluateAirlockCommand(event *discordgo.MessageCreate) {
+	if _, err := fc.Session.ChannelMessageSendReply(event.ChannelID, ":white_check_mark: Evaluate airlock", event.Reference()); err != nil {
+		fc.Log(bots.SevErr, "failed to send command acknowledgement: %v", err)
+	}
+
+	if err := fc.Session.MessageReactionAdd(event.ChannelID, event.ID, "\U0001f7e1"); err != nil {
+		fc.Log(bots.SevErr, "failed to add command reaction: %v", err)
+	}
+
+	fc.RunJoinRoutine(event.Author)
+
+	if err := fc.Session.MessageReactionAdd(event.ChannelID, event.ID, "\U0001F7E2"); err != nil {
+		fc.Log(bots.SevErr, "failed to add completion reaction: %v", err)
+	}
+}
+
 func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.MessageCreate) {
 	if event.Author.ID == fc.Session.State.User.ID {
 		return
@@ -71,7 +87,7 @@ func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.Messa
 	command := strings.ToLower(event.Message.Content)
 
 	if strings.Contains(command, "evaluate airlock") {
-		fc.RunJoinRoutine(event.Author)
+		fc.EvaluateAirlockCommand(event)
 	}
 }
 
