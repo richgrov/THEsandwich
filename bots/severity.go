@@ -11,16 +11,16 @@ const (
 	SevErr
 )
 
-func SeverityToEmote(sev severity) string {
+func SeverityToPrefix(sev severity) string {
 	switch sev {
 	case SevTrace:
 		return ":white_small_square:"
 	case SevInfo:
 		return ":information_source:"
 	case SevWarn:
-		return ":warning:"
+		return ":warning: @everyone"
 	case SevErr:
-		return ":rotating_light:"
+		return ":rotating_light: @everyone"
 	default:
 		log.Fatalf("invalid severity %d\n", sev)
 		return ""

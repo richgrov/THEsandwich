@@ -14,7 +14,7 @@ type Bot struct {
 }
 
 func (bot *Bot) Log(sev severity, format string, args ...any) {
-	bot.Session.ChannelMessageSend(bot.logChannel, SeverityToEmote(sev)+" "+fmt.Sprintf(format, args...))
+	bot.Session.ChannelMessageSend(bot.logChannel, SeverityToPrefix(sev)+" "+fmt.Sprintf(format, args...))
 	log.Printf(format+"\n", args...)
 }
 
