@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -63,15 +64,9 @@ func (fc *flightComputer) RunJoinRoutine(user *discordgo.User) {
 }
 
 func (fc *flightComputer) OnMessage(s *discordgo.Session, event *discordgo.MessageCreate) {
-	content := event.Message.Content
-	if len(content) < 1 || content[0] != '.' {
-		return
-	}
+	command := strings.ToLower(event.Message.Content)
 
-	command := content[1:]
-
-	switch command {
-	case "debug join":
+	if strings.Contains(command, "evaluate airlock") {
 		fc.RunJoinRoutine(event.Author)
 	}
 }
