@@ -32,6 +32,16 @@ func (bot *Bot) AddEventListener(callback any) {
 	bot.Session.AddHandler(callback)
 }
 
+func (bot *Bot) HasPermission(message *discordgo.Message, permissionBit int64) bool {
+	permissionBits, err := bot.Session.State.MessagePermissions(message)
+	if err != nil {
+		bot.Log(SevErr, "failed to get user permissions: %v", err)
+		return false
+	}
+
+	return (permissionBits & permissionBit) != 0
+}
+
 func (bot *Bot) Close() {
 	bot.Session.Close()
 }
