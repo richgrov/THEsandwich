@@ -17,6 +17,8 @@ async def on_ready():
 
 @client.event
 async def on_message(msg: discord.Message):
+    assert client.user is not None
+
     if msg.author == client.user:
         return
 
