@@ -22,7 +22,11 @@ async def on_message(msg: discord.Message):
     if msg.author == client.user:
         return
 
-    print(msg.content)
+    if not client.user.mentioned_in(msg):
+        return
+
+    prompt = msg.content.lstrip(f"<@{client.user.id}>").strip()
+    print(prompt)
 
 
 client.run(config["token"])
