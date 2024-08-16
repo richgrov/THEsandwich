@@ -1,3 +1,4 @@
+import anthropic
 import discord
 import json
 
@@ -8,6 +9,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+anth = anthropic.AsyncAnthropic(api_key=config["anthropic"])
 
 
 @client.event
@@ -26,7 +28,24 @@ async def on_message(msg: discord.Message):
         return
 
     prompt = msg.content.lstrip(f"<@{client.user.id}>").strip()
-    print(prompt)
+
+    async with msg.channel.typing():
+        response = await anth.messages.create(
+            max_tokens=256,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            model="claude-3-5-sonnet-20240620",
+            temperature=0.2,
+        )
+
+        if response.content[0].type != "text":
+            return
+
+        await msg.reply(response.content[0].text)
 
 
 client.run(config["token"])
