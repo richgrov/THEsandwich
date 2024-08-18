@@ -16,21 +16,22 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 # anth = anthropic.AsyncAnthropic(api_key=config["anthropic"])
 gh = Github(auth=Auth.Token(config["github"]))
+gh_user = gh.get_user()
+
 wit = Wit(config["wit"])
 
-# REPOS_TOOL: ToolParam = {
-#     "name": "list_repos",
-#     "description": "List all of The Sandwich's repositories",
-#     "input_schema": {
-#         "type": "object",
-#     },
-# }
+
+async def list_repos(msg: discord.Message):
+    await msg.reply("Standby.")
+    owned_repos = [repo for repo in gh_user.get_repos() if repo.owner.id == gh_user.id]
+    repo_names = ["\n- " + repo.name for repo in owned_repos]
+
+    await msg.reply(f"{len(repo_names)} repositories:\n{''.join(repo_names)}")
 
 
-def list_repos():
-    repo_names = [repo.name for repo in gh.get_user().get_repos()]
-    return ", ".join(repo_names)
-
+ACTIONS = {
+    "list_repos": list_repos,
+}
 
 # async def infer_message(prompt: str, tools: List[Tuple[ToolParam, Callable]]):
 #     message: MessageParam = {"role": "user", "content": prompt}
@@ -121,9 +122,11 @@ async def on_message(msg: discord.Message):
             if intent["confidence"] < 0.5:
                 continue
 
-            if intent["name"] == "list_repos":
-                await msg.reply("Standby.")
-                await msg.reply(list_repos())
+            action = ACTIONS.get(intent["name"])
+            if action is None:
+                continue
+
+            await action(msg)
 
 
 client.run(config["token"])
