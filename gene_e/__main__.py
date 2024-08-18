@@ -29,7 +29,16 @@ async def list_repos(msg: discord.Message):
     await msg.reply(f"{len(repo_names)} repositories:\n{''.join(repo_names)}")
 
 
+async def about_self(msg: discord.Message):
+    await msg.reply(
+        "Hi, I'm GENE-E. While I'm not too active in chat, I oversee most operations "
+        "of THE Sandwich and ensure everything runs smoothly. Be sure to reach out to Richard if "
+        "you have any questions."
+    )
+
+
 ACTIONS = {
+    "about_self": about_self,
     "list_repos": list_repos,
 }
 
