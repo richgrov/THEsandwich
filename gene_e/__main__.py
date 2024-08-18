@@ -123,18 +123,17 @@ async def on_message(msg: discord.Message):
         return
 
     prompt = msg.content.lstrip(f"<@{client.user.id}>").strip()
+    meaning = wit.message(prompt)
 
-    async with msg.channel.typing():
-        meaning = wit.message(prompt)
+    for intent in meaning["intents"]:
+        if intent["confidence"] < 0.5:
+            continue
 
-        for intent in meaning["intents"]:
-            if intent["confidence"] < 0.5:
-                continue
+        action = ACTIONS.get(intent["name"])
+        if action is None:
+            continue
 
-            action = ACTIONS.get(intent["name"])
-            if action is None:
-                continue
-
+        async with msg.channel.typing():
             await action(msg)
 
 
