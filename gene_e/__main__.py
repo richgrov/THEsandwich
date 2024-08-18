@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Callable, List, Tuple
+from typing import Any, Dict
 
 # import anthropic
 # from anthropic.types import MessageParam, ToolParam
@@ -21,8 +21,10 @@ gh_user = gh.get_user()
 
 wit = Wit(config["wit"])
 
+Entities = Dict[str, Any]
 
-async def list_repos(msg: discord.Message):
+
+async def list_repos(msg: discord.Message, _: Entities):
     await msg.reply("Standby.")
     owned_repos = [repo for repo in gh_user.get_repos() if repo.owner.id == gh_user.id]
     repo_names = [f"\n- `{repo.name}`" for repo in owned_repos]
@@ -30,7 +32,7 @@ async def list_repos(msg: discord.Message):
     await msg.reply(f"{len(repo_names)} repositories:\n{''.join(repo_names)}")
 
 
-async def about_self(msg: discord.Message):
+async def about_self(msg: discord.Message, _: Entities):
     await asyncio.sleep(3)
     await msg.reply(
         "Hi, I'm GENE-E. While I'm not too active in chat, I oversee most operations "
@@ -39,8 +41,18 @@ async def about_self(msg: discord.Message):
     )
 
 
+async def clear_messages(msg: discord.Message, entities: Entities):
+    num_messages = entities.get("wit$number")
+    if num_messages is None:
+        return
+
+    await msg.reply(f"Confirm- delete {num_messages} messages?")
+    await msg.channel.purge(limit=num_messages, bulk=True)
+
+
 ACTIONS = {
     "about_self": about_self,
+    "clear_messages": clear_messages,
     "list_repos": list_repos,
 }
 
@@ -109,6 +121,12 @@ ACTIONS = {
 #                     yield response
 
 
+def all_entities(meaning):
+    for entity_group in meaning["entities"].values():
+        for entity in entity_group:
+            yield entity
+
+
 @client.event
 async def on_ready():
     print("Online")
@@ -121,6 +139,10 @@ async def on_message(msg: discord.Message):
     if msg.author == client.user:
         return
 
+    is_reply = msg.reference is not None and not msg.is_system
+    if is_reply:
+        return
+
     if not client.user.mentioned_in(msg):
         return
 
@@ -131,12 +153,20 @@ async def on_message(msg: discord.Message):
         if intent["confidence"] < 0.5:
             continue
 
+        entities = {}
+        for entity in all_entities(meaning):
+            if entity["confidence"] < 0.25:
+                continue
+
+            name = entity["name"]
+            entities[name] = entity["value"]
+
         action = ACTIONS.get(intent["name"])
         if action is None:
             continue
 
         async with msg.channel.typing():
-            await action(msg)
+            await action(msg, entities)
 
 
 client.run(config["token"])
