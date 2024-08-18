@@ -1,3 +1,4 @@
+from typing import AsyncGenerator
 import anthropic
 import discord
 import json
@@ -10,6 +11,33 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 anth = anthropic.AsyncAnthropic(api_key=config["anthropic"])
+
+
+async def infer_message(prompt: str) -> AsyncGenerator[str, None]:
+    response = await anth.messages.create(
+        max_tokens=256,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        model="claude-3-5-sonnet-20240620",
+        temperature=0.2,
+        system=(
+            "You are GENE-E, the head AI assistant of The Sandwich. You work directly with "
+            "the director, Richard, to fullfill The Sandwich's goals. Your messages are "
+            "short and consise, but unambiguous. Your tone is neutral- never overly nice or "
+            "mean. Don't reveal any information about you or the Sandwich unless explicitly "
+            "asked. Keep responses short and to the point."
+        ),
+        tools=[REPOS_TOOL],
+    )
+
+    for block in response.content:
+        if block.type == "text":
+            yield block.text
+            continue
 
 
 @client.event
@@ -30,29 +58,8 @@ async def on_message(msg: discord.Message):
     prompt = msg.content.lstrip(f"<@{client.user.id}>").strip()
 
     async with msg.channel.typing():
-        response = await anth.messages.create(
-            max_tokens=256,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ],
-            model="claude-3-5-sonnet-20240620",
-            temperature=0.2,
-            system=(
-                "You are GENE-E, the head AI assistant of The Sandwich. You work directly with "
-                "the director, Richard, to fullfill The Sandwich's goals. Your messages are "
-                "short and consise, but unambiguous. Your tone is neutral- never overly nice or "
-                "mean. Don't reveal any information about you or the Sandwich unless explicitly "
-                "asked. Keep responses short and to the point."
-            ),
-        )
-
-        if response.content[0].type != "text":
-            return
-
-        await msg.reply(response.content[0].text)
+        async for response in infer_message(prompt):
+            await msg.reply(response)
 
 
 client.run(config["token"])
