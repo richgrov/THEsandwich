@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 import anthropic
 import discord
+from github import Github, Auth
 import json
 
 with open("config.json", "r") as file:
@@ -11,6 +12,12 @@ intents.message_content = True
 
 client = discord.Client(intents=intents)
 anth = anthropic.AsyncAnthropic(api_key=config["anthropic"])
+gh = Github(auth=Auth.Token(config["github"]))
+
+
+def list_repos():
+    repo_names = [repo.name for repo in gh.get_user().get_repos()]
+    return ", ".join(repo_names)
 
 
 async def infer_message(prompt: str) -> AsyncGenerator[str, None]:
