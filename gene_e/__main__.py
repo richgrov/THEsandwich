@@ -2,6 +2,7 @@ from typing import AsyncGenerator, Callable, List, Tuple
 
 # import anthropic
 # from anthropic.types import MessageParam, ToolParam
+import asyncio
 import discord
 from github import Github, Auth
 from wit import Wit
@@ -30,6 +31,7 @@ async def list_repos(msg: discord.Message):
 
 
 async def about_self(msg: discord.Message):
+    await asyncio.sleep(3)
     await msg.reply(
         "Hi, I'm GENE-E. While I'm not too active in chat, I oversee most operations "
         "of THE Sandwich and ensure everything runs smoothly. Be sure to reach out to Richard if "
