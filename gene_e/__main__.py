@@ -24,7 +24,7 @@ wit = Wit(config["wit"])
 async def list_repos(msg: discord.Message):
     await msg.reply("Standby.")
     owned_repos = [repo for repo in gh_user.get_repos() if repo.owner.id == gh_user.id]
-    repo_names = ["\n- " + repo.name for repo in owned_repos]
+    repo_names = [f"\n- `{repo.name}`" for repo in owned_repos]
 
     await msg.reply(f"{len(repo_names)} repositories:\n{''.join(repo_names)}")
 
