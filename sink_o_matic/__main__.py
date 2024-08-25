@@ -3,6 +3,8 @@ from discord import app_commands, ui
 import json
 import base64
 import anthropic
+from PIL import Image
+from io import BytesIO
 
 with open("config.json", "r") as file:
     config = json.load(file)
@@ -51,8 +53,19 @@ async def list_repos(interaction: discord.Interaction, file: discord.Attachment)
     await interaction.response.send_modal(SinkModal(file))
 
 
+def limit_image_size(binary: bytes) -> bytes:
+    with Image.open(BytesIO(binary)) as img:
+        img.thumbnail((512, 512))
+        img = img.convert("RGB")
+        output = BytesIO()
+        img.save(output, format="JPEG")
+        return output.getvalue()
+
+
 async def has_sink(image: discord.Attachment):
     binary = await image.read()
+    binary = limit_image_size(binary)
+
     b64 = base64.b64encode(binary).decode("utf-8")
 
     message = await anth.messages.create(
