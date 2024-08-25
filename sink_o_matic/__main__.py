@@ -1,6 +1,8 @@
 import discord
 from discord import app_commands, ui
 import json
+import base64
+import anthropic
 
 with open("config.json", "r") as file:
     config = json.load(file)
@@ -11,6 +13,8 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 command_tree = app_commands.CommandTree(client)
+
+anth = anthropic.AsyncAnthropic(api_key=config["anthropic"])
 
 
 class SinkModal(ui.Modal, title="Add a sink"):
@@ -38,7 +42,49 @@ class SinkModal(ui.Modal, title="Add a sink"):
     description="Add to the sink repository",
 )
 async def list_repos(interaction: discord.Interaction, file: discord.Attachment):
+    if not await has_sink(file):
+        await interaction.response.send_message(
+            ":x: No sink was found in the image you provided"
+        )
+        return
+
     await interaction.response.send_modal(SinkModal(file))
+
+
+async def has_sink(image: discord.Attachment):
+    binary = await image.read()
+    b64 = base64.b64encode(binary).decode("utf-8")
+
+    message = await anth.messages.create(
+        max_tokens=3,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": b64,
+                        },
+                    }
+                ],
+            }
+        ],
+        temperature=0,
+        system="Say YES if the image shows a sink, say NO otherwise. Some bathtubs may look like sinks- don't count them.",
+        model="claude-3-5-sonnet-20240620",
+    )
+
+    response = message.content[0].text.lower()  # pyright: ignore
+    if response.startswith("yes"):
+        return True
+    elif response.startswith("no"):
+        return False
+    else:
+        print("Got unexpected response " + response)
+        return False
 
 
 @client.event
