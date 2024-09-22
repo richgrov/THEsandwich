@@ -33,9 +33,13 @@ class SinkModal(ui.Modal, title="Add a sink"):
     )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await interaction.channel.send(  # pyright: ignore
-            "Prepare for greatness", file=await self.file.to_file()
-        )
+        sink_channel = interaction.client.get_channel(config["channel"])
+        msg = "Sink submitted by " + interaction.user.mention + "\n" + \
+                "**Found at:** " + self.location.value + "\n" + \
+                "**Faucet clearance:** " + self.faucet_clearance.value + "\n" + \
+                "Submit your own with `/sink`"
+
+        await sink_channel.send(msg, file=await self.file.to_file())  #pyright: ignore
         await interaction.response.send_message("Done :white_check_mark:")
 
 
