@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands, ui
+import asyncio
 import json
 import base64
 import anthropic
@@ -110,4 +111,13 @@ async def on_ready():
     print("Online")
 
 
-client.run(config["token"])
+async def run_client(token):
+    client = discord.Client(intents=discord.Intents.default())
+    await client.start(token)
+
+async def main():
+    others = [asyncio.create_task(run_client(token)) for token in config["other"]]
+    await asyncio.gather(client.start(config["token"]), *others)
+
+# Run the main coroutine
+asyncio.run(main())
