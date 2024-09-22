@@ -47,6 +47,7 @@ class SinkModal(ui.Modal, title="Add a sink"):
 @command_tree.command(
     name="sink",
     description="Add to the sink repository",
+    guild=discord.Object(config["guild"]),
 )
 async def list_repos(interaction: discord.Interaction, file: discord.Attachment):
     if not await has_sink(file):
@@ -107,7 +108,7 @@ async def has_sink(image: discord.Attachment):
 
 @client.event
 async def on_ready():
-    await command_tree.sync()
+    await command_tree.sync(guild=discord.Object(config["guild"]))
     print("Online")
 
 
