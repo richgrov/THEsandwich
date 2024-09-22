@@ -1,0 +1,4 @@
+__pycache__/
+Scripts/
+Lib/site-packages/
+pyvenv.cfg
