@@ -24,7 +24,7 @@ class SinkModal(ui.Modal, title="Add a sink"):
         self.file = file
         super().__init__(title="Add a sink")
 
-    name = ui.TextInput(
+    location = ui.TextInput(
         label="Location", placeholder="Where did you find this sink?", required=True
     )
 
